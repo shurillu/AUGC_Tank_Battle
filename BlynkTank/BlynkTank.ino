@@ -4,6 +4,9 @@
 #include <BlynkSimpleEsp8266.h>
 #include <Servo.h>
 #include "CIR.h"
+#include "credentials.h"              // modify here your credentials like:
+                                      // - Wifi SSID and password
+                                      // - Blynk auth token
 
 #define TURRET_CENTER 98              // the turret center position (degree)
 #define PWM_DEADBAND  300             // PWM motor threshold (below this value the motor is stopped)
@@ -41,15 +44,6 @@
 #define VIRTUAL_ACCELEROMETER V6      // accelerometer virtual pin [FUTURE ADD ONS]
 
 ADC_MODE(ADC_TOUT)                    // NodeMCU ADC initialization: external pin reading values enabled
-
-// You should get Auth Token in the Blynk App.
-// Go to the Project Settings (nut icon).
-char blynkAuthToken[] = "myTOKEN";    // REPLACE WITH YOUR TOKEN
-
-// Your WiFi credentials.
-// Set password to "" for open networks.
-char ssid[] = "mySSID";               // REPLACE WITH YOUR NETWORK SSID
-char pass[] = "myPASSWORD";           // REPLACE WITH YOUR PASSWORD
 
 WidgetTerminal terminal(VIRTUAL_TERMINAL); // for the terminal log
 Servo turret;                              // for the servo turret
