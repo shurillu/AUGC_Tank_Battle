@@ -1,6 +1,6 @@
 # 3D printing instruction
 
-Some instruction for a better printing result.
+In the following table, you can find some instruction for a better printing result. When specified, enable the "Touching Build Plate" support type.
 
 3D File | Description / advices | Supports
 --------|-----------------------|---------
