@@ -13,7 +13,7 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 ## Index
 
 + [To do list](#To-do-list)
-+ [BOM (Bill of Materials)](#BOM-(Bill-of-Materials))
++ [BOM (Bill of Materials)](#BOM-Bill-of-Materials)
 + [Printing instruction](#Printing-instruction)
 
 ## To do list
