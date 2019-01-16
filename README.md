@@ -62,7 +62,7 @@ Here what you need to build one:
 
 ## Printing instruction
 
-In the bottom part of this [section](https://github.com/shurillu/AUGC_Tank_Battle/tree/master/3D%20Files#3D-printing-instruction) you can find some instructions/advices for printing all the tanks parts.
+In this [section](https://github.com/shurillu/AUGC_Tank_Battle/tree/master/3D%20Files#3D-printing-instruction) you can find some instructions/advices for printing all the tanks parts.
 
 
 
