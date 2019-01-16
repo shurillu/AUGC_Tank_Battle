@@ -1,0 +1,3 @@
+ESP8266 max pin current: 12mA
+   https://www.esp8266.com/viewtopic.php?f=6&t=9815
+

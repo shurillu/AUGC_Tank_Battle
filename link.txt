@@ -1,0 +1,28 @@
+Thingiverse:
+   https://www.thingiverse.com/thing:2770957
+
+GitHub:
+   https://github.com/GeorgeChiou/Robot-Shield-V2.0
+
+Linkit board 7697
+   https://www.seeedstudio.com/LinkIt-7697-p-2818.html
+
+Roboshield
+   https://www.tindie.com/products/jasonleung8866/robot-shield-servo-control-board-for-linkit-7697/
+
+Articolo interrupt:
+   https://techtutorialsx.com/2016/12/11/esp8266-external-interrupts/
+
+Articolo PWM
+   https://stackoverflow.com/questions/42112357/how-to-implement-esp8266-5-khz-pwm
+   http://esp8266.github.io/Arduino/versions/2.0.0-rc2/doc/reference.html
+
+   https://www.analysir.com/blog/2017/01/29/updated-esp8266-nodemcu-backdoor-upwm-hack-for-ir-signals/
+
+Articolo timer
+   https://circuits4you.com/2018/01/02/esp8266-timer-ticker-example/
+   https://github.com/esp8266/Arduino/issues/1844
+
+IMPORTANTE
+   https://www.esp8266.com/viewtopic.php?f=160&t=17549 
+

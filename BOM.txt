@@ -1,0 +1,24 @@
+DC motor N20 x2
+Servo motor
+Boost converter 5V
+NodeMCU 1.0
+Motor shield for NodeMCU 1.0
+TSOP38238 IR receiver
+5mm IR diode transmitter
+100K Ohm 1/4W 1% (voltage divider)
+180  Ohm 1/4W 5% (IR diode current limiter)
+1S battery 55mm x 40mm x 8mm
+Battery charger
+Battery connector
+Dupont pin header connector kit
+M3 nuts x2
+M3 grain x2
+M2 socketed cap 8mm x8
+
+DFPlayer
+Speaker
+
+
+
+Batteria
+https://hobbyking.com/en_us/turnigy-nano-tech-750mah-1s-70c-lipo-pack-jst-walker-hr-tech.html
