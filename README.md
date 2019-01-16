@@ -44,6 +44,10 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 + [ ] Upgrade the IR turret cover and the IR cover to accomodate a wireless camera for FPV playing.
 + [ ] Modify the Track_32PCS.stl file to slightly increase the center joint hole diameter and reduce the lateral joint hole diameter.
 
+#### Harware related
++ [ ] Circuit for driving more current to the IR diode. 
++ [ ] Circuit for driving two IR diodes (dual cannon turret "Turret_X.stl").
+
 ## BOM (Bill of Materials)
 Here what you need to build one:
 + **NodeMCU 1.0** - *Pay attention* that there are several models of NodeMCU: they can differ from the **USB to Serial chip** (CP2102 or CH340G) and/or from the **size**. You can identify which NodeMCU is ok by looking at the pin labels: a good ones have the pin labels printed all in the same row ([see this image](https://github.com/shurillu/AUGC_Tank_Battle/blob/master/images/NodeMCU_Comparison.jpg)). [I have this one](https://it.aliexpress.com/item/Nodo-MCU-bordo-di-Sviluppo-di-Kit-V3-CP2102-NodeMCU-Motor-Shield-Wifi-Esp8266-Esp-12e/32953905540.html)
@@ -52,9 +56,9 @@ Here what you need to build one:
 + **9g Servo Motor** - A 9g Servo motor for turret movement. You can choose between plastic or metal geared servo, it's up to you. If you buy the cheap chinese version, my advice is to buy several because sometimes they are faulty. [Here an example](https://it.aliexpress.com/item/100-NUOVO-Commercio-All-ingrosso-SG90-9g-Micro-Servo-Motore-Per-Robot-6CH-RC-Elicottero-Aereo/32831149040.html).
 + **5V 2A step up/boost converter** - There are several models, some with fixed output voltage (smaller in size), other with a voltage adjust potentiometer (bigger in size). If you choose the boost converter with the voltage adjust you can squeeze more power from the motors (setting the output voltage to 6 Volt!).  [I have this one](https://it.aliexpress.com/item/DC-DC-Auto-Boost-Buck-adjustable-step-down-Converter-XL6009-Module-Solar-Voltage/32639790122.html).
 + **TSOP38238 IR receiver** - Infrared receiver with IR filter and embedded demodulator. You can buy it [here](https://it.aliexpress.com/item/10-pz-100-nuovo-e-originale-TSOP38238-Ricevitore-IR-I-Moduli-per-I-Sistemi-di-Controllo/32947920639.html) or at your local retail seller (or wherever you want).
-+ **5mm 940nm 50mA IR diode transmitter** - There are several models, I choose a model with an irradiation angle of 20 degree, in order to concentrate the irradiation power on the front of the diode.
++ **5mm 940nm 50mA IR diode transmitter** - There are several models, I choose a model with an irradiation angle of 20 degree, in order to concentrate the irradiation power on the front of the diode. If you want to use the "Turret_X.stl" turret, you need two of this diode.
 + **100K Ohm 1/4W 1% resistor** - Used as a voltage divider, we need it to read the battery voltage.
-+ **180 Ohm 1/4W 5% resistor** - Used as a current limiter for the IR diode.
++ **180 Ohm 1/4W 5% resistor** - Used as a current limiter for the IR diode. If you want to use the "Turret_X.stl" turret, you need two of this resistor.
 + **1S LiPo battery** - The tank main power source, 600mA 5C at least. Max dimensions are 55mm x 40mm x 9mm. [This one could be a good choice - not tested yet](https://hobbyking.com/en_us/turnigy-nano-tech-750mah-1s-70c-lipo-pack-jst-walker-hr-tech.html).
 + **Battery connectors** - A connector that match with the battery connector. *You need two of them* (one for the tank, optionally one for the battery charger). For example, if you choose the battery as above, [you need these](https://it.aliexpress.com/item/2-10-Pairs-100-150mm-2-Spille-Connettore-JST-Spina-del-Cavo-Maschio-Femmina-Per-RC/32870752993.html).
 + **LiPo charger** - (optional) A little charger for the LiPo. A good choice is a charger with the TP4056 chip. [Here a good one](https://it.aliexpress.com/item/Smart-Electronics-5V-Micro-USB-1A-18650-Lithium-Battery-Charging-Board-With-Protection-Charger-Module-for/32500042672.html).
