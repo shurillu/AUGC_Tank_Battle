@@ -33,6 +33,11 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 + [x] BOM Section
 + [x] Creating and populating repository
 
+#### 3D files related
++ [ ] IR_Cover.stl - Make a little socket/hetch for the IR Receiver terminals. Make some wings to keep in place the cover.
++ [ ] Upgrade the IR turret cover and the IR cover to accomodate a wireless camera for FPV playing.
++ [ ] Modify the Track_32PCS.stl file to slightly increase the center joint hole diameter and reduce the lateral joint hole diameter.
+
 ## BOM (Bill of Materials)
 Here what you need to build one:
 + **NodeMCU 1.0** - *Pay attention* that there are several models of NodeMCU: they can differ from the **USB to Serial chip** (CP2102 or CH340G) and/or from the **size**. You can identify which NodeMCU is ok by looking at the pin labels: a good ones have the pin labels printed all in the same row ([see this image](https://github.com/shurillu/AUGC_Tank_Battle/blob/master/images/NodeMCU_Comparison.jpg)). [I have this one](https://it.aliexpress.com/item/Nodo-MCU-bordo-di-Sviluppo-di-Kit-V3-CP2102-NodeMCU-Motor-Shield-Wifi-Esp8266-Esp-12e/32953905540.html)
