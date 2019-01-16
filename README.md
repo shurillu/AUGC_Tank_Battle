@@ -27,9 +27,9 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 
 #### Repository related
 + [ ] Tools/Hardware section
-+ [ ] 3D printing section
 + [ ] Arduino IDE/library configuration
 + [ ] Assembling section
++ [x] 3D printing section
 + [x] BOM Section
 + [x] Creating and populating repository
 
