@@ -60,7 +60,9 @@ Here what you need to build one:
 + **MicroSD** - Optionally, used to store the MP3 sound fx. Any size is fine, up to 32GB.
 + **Mini Speaker 3mm ~ 29mm, 8 Ohm, 0.25W ~ 1W** - Optionally, a speaker for playing the sound fx. [something like that - not tested yet](https://it.aliexpress.com/item/2-PCS-1-w-eight-o-tablet-horn-the-original-way-N90-U9GT2-1420-panel-speaker/32782733427.html).
 
+## Printing instruction
 
+Follow this [link](https://github.com/shurillu/AUGC_Tank_Battle/tree/master/3D%20Files)
 
 
 
