@@ -10,6 +10,12 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 
 ***Actually the project is in a alpha release: it work but not all functionalities are implemented.***
 
+## Index
+
++ [To do list](#To-do-list)
++ [BOM (Bill of Materials)](#BOM-(Bill-of-Materials))
++ [Printing instruction](#Printing-instruction)
+
 ## To do list
 #### Software related
 + [ ] WifiManager and custom personalization
