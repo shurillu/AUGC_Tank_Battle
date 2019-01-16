@@ -1,4 +1,4 @@
-# 3D printing istruction
+# 3D printing instruction
 
 Some instruction for a better printing result.
 
