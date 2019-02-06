@@ -332,3 +332,8 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+BlynkTank/__vm/.BlynkTank.vsarduino.h
+BlynkTank/__vm/Compile.vmps.xml
+BlynkTank/__vm/Configuration.Debug.vmps.xml
+BlynkTank/__vm/Upload.vmps.xml
+BlynkTank/BlynkTank.vcxproj.filters

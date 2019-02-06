@@ -2,6 +2,7 @@
 #include "Ticker.h"
 #include "CIR.h"
 
+
 uint16_t txBuffer;
 uint8_t  bitTXed;
 Ticker   txTicker;
@@ -53,11 +54,9 @@ void beginReceivingData(void) {
 }
 
 
-
-
 void sendData(uint8_t txPin) {
 	if (txBuffer & 0x01)
-		analogWrite(txPin, (PWMRANGE / 2));
+		analogWrite(txPin, (PWMRANGE / DUTY_CYCLE_DIVIDER));
 	else
 		analogWrite(txPin, 0);
 
@@ -81,6 +80,7 @@ CIR::CIR(uint8_t rxPin, uint8_t txPin)
 	m_txPin = txPin;
 	m_receivedData = NO_VALID_DATA;
 	rxBuffer = NO_VALID_DATA;
+	m_isTransmittingCarrier = false;
 }
 
 CIR::~CIR()
@@ -99,6 +99,10 @@ bool CIR::sendByte(uint8_t data)
 	// already sending data
 	if (isSendingData())
 		return false;
+
+	if (m_isTransmittingCarrier)
+		transmitCarrier(false);
+
 	parity = 0;
 	for (uint8_t i = 0; i < 8; i++) {
 		parity += (data >> i) & 0x01;
@@ -118,6 +122,32 @@ bool CIR::sendByte(uint8_t data)
 bool CIR::isSendingData(void)
 {
 	return (txTicker.active());
+}
+
+bool CIR::transmitCarrier(bool enable)
+{
+	if (isSendingData() || isReceivingData())
+		return(false);
+
+	if (enable) {
+		detachInterrupt(digitalPinToInterrupt(m_rxPin));
+		analogWrite(m_txPin, (PWMRANGE / DUTY_CYCLE_DIVIDER));
+		m_isTransmittingCarrier = true;
+	}
+	else {
+		analogWrite(m_txPin, 0);
+		m_isTransmittingCarrier = false;
+		attachInterrupt(digitalPinToInterrupt(m_rxPin), beginReceivingData, FALLING);
+	}
+	return(true);
+}
+
+bool CIR::detectCarrier(void)
+{
+	uint8_t value = digitalRead(m_rxPin);
+	if (value != 0)
+		return(false);
+	return(true);
 }
 
 
