@@ -297,14 +297,16 @@ void loop()
 	// if I have received an IR valid packet...
 	int hitCode = myTank.getHitCode();
 	if (hitCode != -1) {
-		int currentDamage = myTank.getMaxHitpoint() - myTank.gotHit();
-		Blynk.virtualWrite(VIRTUAL_HITPOINT, currentDamage);
-		// print it in the terminal log (with a timing reference) and flush the data
-		terminal.printf("[%07lu] HIT by %c\n", millis() / 100, hitCode);
-		terminal.flush();
-		if (myTank.getMaxHitpoint() == currentDamage) {
-			Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GREEN);
-			couldRepair = true;
+		if (!couldRepair) {  // prevent get hit when repairing... changing it using isImmune ........................................................
+			int currentDamage = myTank.getMaxHitpoint() - myTank.gotHit();
+			Blynk.virtualWrite(VIRTUAL_HITPOINT, currentDamage);
+			// print it in the terminal log (with a timing reference) and flush the data
+			terminal.printf("[%07lu] HIT by %c\n", millis() / 100, hitCode);
+			terminal.flush();
+			if (myTank.getMaxHitpoint() == currentDamage) {
+				Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GREEN);
+				couldRepair = true;
+			}
 		}
 	}
 }

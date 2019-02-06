@@ -16,15 +16,37 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 + [BOM (Bill of Materials)](#BOM-Bill-of-Materials)
 + [Printing instruction](#Printing-instruction)
 
+## Tank functionalities
+Here all the functionalities actually implemented.
++ **Wifi/Blynk connection**. If the tank cannot connect to the WiFi network or to the Blynk server (custom or official one), it will start the hotspot (SSID and password customizable) and shake the turret 3 times (NAK emote - configurable). Once connected to the hotspot, a captive portal will be displayed and it is possible to configure:
+  + the WiFi credentials
+  + the tank hotspot SSID and optionally the password
+  + the Blynk server address (URL or IP), the Blynk server port and the Blynk token).
+  
+  If a connection to the Blynk server will be established, the tank shake the turret once (ACK emote - configurable)
++ **Battery management**. If the battery voltage go below a threshold (3.5V - customizable) the thank will move anymore. If the voltage raise up, the tank will move again.
++ **Ammo management**. There are several functionalities:
+  + *recharging time*. Every time the tank shoot a round, it must wait a while (1500 millisecond - customizable) after shooting again. 
+  + *max ammos*. The tank starts with a limited ammo quantity (20 - customizable). 
+  + *current ammos*. Every time the tank shoot an ammo, the current ammos decrease. When the current ammos are zero, the tank will shoot anymore.
+  + *auto regenerating ammos*. The ammos will regenerating every 7000 milliseconds (customizable). In order to regenerate ammos the tank needs to not fire. If fire a round, the regenerating timer will reset.
++ **Damage management**. There are several functionalities:
+  + *max damage*. The total hit point of the tank (200 - customizable).
+  + *ammo damage*. The damage of a single shoot (10 - customizable).
+  + *current damage*. Every time the tank will be hit, the current damage will increased by the ammo damage. If the current damage reach the total hit points (max damage) the tank will move anymore. In order to move again, you have to repair the tank (see below)
+  + *repair tank*. If the tank max out the total damage (no more hit points) the repair button will be enabled. In order to repair the tank and get moving it again, quickly press repeatedly the repair button to empty the damage bar.
++ **Moving management**. The tank can move itself and its turret using the custom Blynk app. If the voltage of the battery is below a threshold (see battery management) or if the tank is damaged (see damage management) the tank will no move.
++ **Configuration**. in the "CONFIG" tab of the custom Blynk app it is possible to configure the leftmost,  the rightmost and the center turret position.
+
 ## To do list
 #### Software related
-+ [ ] WifiManager and custom personalization
-+ [ ] Damage routines
-+ [ ] Repair routines
-+ [ ] Discharging and recharging ammos
 + [ ] Multiplayer platform
 + [ ] Audio fx
 + [ ] Drive with accelerometers
++ [x] WifiManager and custom personalization
++ [x] Damage routines
++ [x] Repair routines
++ [x] Discharging and recharging ammos
 + [x] Blynk interface
 + [x] Moving the tank
 + [x] Moving the turret
@@ -40,9 +62,9 @@ Some mods are applied (for example, we use the NodeMCU 1.0 board in spite of Lin
 + [x] Creating and populating repository
 
 #### 3D files related
-+ [ ] IR_Cover.stl - Make a little socket/hetch for the IR Receiver terminals. Make some wings to keep in place the cover.
 + [ ] Upgrade the IR turret cover and the IR cover to accomodate a wireless camera for FPV playing.
 + [ ] Modify the Track_32PCS.stl file to slightly increase the center joint hole diameter and reduce the lateral joint hole diameter.
++ [x] IR_Cover.stl - Make a little socket/hetch for the IR Receiver terminals. Make some wings to keep in place the cover.
 
 #### Harware related
 + [ ] Circuit for driving more current to the IR diode. 
