@@ -55,7 +55,7 @@ public:
 	uint8_t   repairTank(void);
 	uint8_t   newAmmos(uint8_t ammos = 1);
 
-
+	void ammoReloadDone(void);
 	bool writeTankConfigFile(bool useDefaults = false);
 
 	//	void checkConfigPortalRequest(bool force = false);
@@ -74,10 +74,14 @@ private:
 
 	uint8_t  m_maxHitPoints, m_hitPoints;
 	uint8_t  m_ammoDamage, m_maxAmmo, m_ammo;
-	uint16_t m_ammoRechargeTime;
+	uint16_t m_ammoRechargeTime, m_ammoSpawnTime;
 	uint8_t  m_repairValue;
 	
-	Ticker   m_rechargeTimer;
+	Ticker   m_reloadTimer;
+	Ticker   m_spawnAmmoTimer;
+
+	bool m_isReloading;
+	bool m_canRespawnAmmo;
 
 	bool initFS(bool formatFS = false);
 	bool writeNetworkConfigFile(bool useDefaults = false);

@@ -51,9 +51,6 @@
 #define VIRTUAL_TURRET_RIGHT  V12    // right server position
 #define VIRTUAL_SAVE_SLIDER   V13    // save method
 
-// Spawn ammo timeout: every SPAWN_AMMO_TIME millseconds spawn a new round up to the maximum ammo capacity
-// the timer will reset every time the user shoot so, in order to recharge ammo, the user needs to not shoot
-#define SPAWN_AMMO_TIMEOUT        7000  // ms
 
 // Battery voltage threshold. If the battery voltage is below this threshold, all the functionalities are disabled
 // (motors, shoot, etc).
@@ -63,15 +60,14 @@
 // global varibles ----------------------------------------------------------------------------------------------------
 WidgetTerminal terminal(VIRTUAL_TERMINAL); // for the terminal log
 BlynkTimer voltageTimer;
-BlynkTimer spawnAmmoTimer;
-int spawnAmmoTimerID;
+Ticker needRepairTimer;
 bool couldMove;
 bool couldRepair;
 
 CTank myTank;
-int centerAngle;
-int spawnAmmoTime = SPAWN_AMMO_TIMEOUT;  // spawn a round every THIS time. If you shoot, the timer restart
+uint8_t ammos;
 
+bool turretRepairMovement;
 
 // timer handlers -----------------------------------------------------------------------------------------------------
 void voltageTimerEvent(void){
@@ -82,7 +78,6 @@ void voltageTimerEvent(void){
 		Blynk.setProperty(VIRTUAL_VOLTAGE, "color", BLYNK_RED);
 		terminal.printf("[%07lu] LOW BATTERY %umV!!!\n", millis() / 100, voltage);
 		terminal.flush();
-
 	}
 	else {
 		couldMove = true;
@@ -90,9 +85,15 @@ void voltageTimerEvent(void){
 	}
 }
 
-void spawnAmmoTimerEvent(void) {
-	Blynk.virtualWrite(VIRTUAL_AMMO, myTank.newAmmos());
+void needRepairTimerEvent(void) {
+	if (turretRepairMovement)
+		myTank.moveTurretDegree(60);
+	else
+		myTank.moveTurretDegree(120);
+	turretRepairMovement = !turretRepairMovement;
+
 }
+
 
 void updateTurretSlider(void) {
 	Blynk.setProperty(VIRTUAL_TURRET, "min", myTank.getServoMin_us());
@@ -111,7 +112,8 @@ void blynkTankInit(void) {
 	Blynk.setProperty(VIRTUAL_HITPOINT, "max", myTank.getMaxHitpoint());
 	Blynk.virtualWrite(VIRTUAL_HITPOINT, 0);
 
-	Blynk.virtualWrite(VIRTUAL_AMMO, myTank.getAmmo());
+	ammos = myTank.getAmmo();
+	Blynk.virtualWrite(VIRTUAL_AMMO, ammos);
 
 	Blynk.setProperty(VIRTUAL_VOLTAGE, "color", BLYNK_GREEN);
 
@@ -218,7 +220,6 @@ BLYNK_WRITE(VIRTUAL_FIRE_BTN) {
 	if (value == 1) {
 		if (myTank.shoot()) {// shoot an ammo
 			Blynk.virtualWrite(VIRTUAL_AMMO, myTank.getAmmo());
-			spawnAmmoTimer.restartTimer(spawnAmmoTimerID);      // the ammos regeneration works only if the tank don't shoot
 		}
 	}
 }
@@ -236,7 +237,9 @@ BLYNK_WRITE(VIRTUAL_REPAIR_BTN) {
 		if (0 == currentDamage) {
 			Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GRAY);
 			couldRepair = 0;
-
+			needRepairTimer.detach();
+			Blynk.virtualWrite(VIRTUAL_TURRET, (myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
+			myTank.moveTurret_us((myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
 		}
 	}
 }
@@ -284,7 +287,6 @@ void setup()
 	blynkTankInit();
 
 	voltageTimer.setInterval(100, voltageTimerEvent);
-	spawnAmmoTimerID = spawnAmmoTimer.setInterval(spawnAmmoTime, spawnAmmoTimerEvent);
 	myTank.shakeTurretAnimation(1);
 }
 
@@ -292,12 +294,17 @@ void loop()
 {
 	Blynk.run(); // Blynk server synchronization
 	voltageTimer.run();
-	spawnAmmoTimer.run();
+
+	// for auto regenerating ammos
+	if (ammos != myTank.getAmmo()) {
+		ammos = myTank.getAmmo();
+		Blynk.virtualWrite(VIRTUAL_AMMO, ammos);
+	}
 
 	// if I have received an IR valid packet...
 	int hitCode = myTank.getHitCode();
 	if (hitCode != -1) {
-		if (!couldRepair) {  // prevent get hit when repairing... changing it using isImmune ........................................................
+		if (!couldRepair) {  // prevent get hit when repairing...
 			int currentDamage = myTank.getMaxHitpoint() - myTank.gotHit();
 			Blynk.virtualWrite(VIRTUAL_HITPOINT, currentDamage);
 			// print it in the terminal log (with a timing reference) and flush the data
@@ -305,6 +312,7 @@ void loop()
 			terminal.flush();
 			if (myTank.getMaxHitpoint() == currentDamage) {
 				Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GREEN);
+				needRepairTimer.attach_ms(300, needRepairTimerEvent);
 				couldRepair = true;
 			}
 		}

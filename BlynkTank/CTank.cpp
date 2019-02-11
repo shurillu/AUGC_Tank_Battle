@@ -46,10 +46,11 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define WIFI_TIMEOUT       10    // seconds
 
 #define DEFAULT_MAX_HITPOINT       200
-#define DEFAULT_AMMO_RECHARGE_TIME 1500 //milliseconds
-#define DEFAULT_AMMO_DAMAGE        10
+#define DEFAULT_AMMO_RECHARGE_TIME 1500 // milliseconds
+#define DEFAULT_AMMO_DAMAGE        40
 #define DEFAULT_MAX_AMMO           20
 #define DEFAULT_REPAIR_VALUE       5
+#define DEFAULT_AMMO_SPAWN_TIME    7000  // milliseconds
 
 
 #define NETWORK_CONFIG_FILE "/network.cfg"
@@ -89,12 +90,16 @@ void saveConfigCallback() {
 }
 // ------------------------------------------------------------------------------------------------------------
 
-bool isAmmoRecharging;
-void ammoRecharge(void) {
-	isAmmoRecharging = false;
+// ammoReloadTimer callback. Used to simulate the ammo reload time 
+void ammoReload(CTank* tank) {
+	tank->ammoReloadDone();
 	Serial.println("Recharged");
 }
 
+
+void spawnAmmo(CTank* tank) {
+	tank->newAmmos(1);
+}
 
 
 CTank::CTank():CTank(false)
@@ -132,7 +137,9 @@ CTank::CTank(bool formatFS)
 	m_ammoDamage       = DEFAULT_AMMO_DAMAGE;
 	m_ammoRechargeTime = DEFAULT_AMMO_RECHARGE_TIME;
 	m_repairValue      = DEFAULT_REPAIR_VALUE;
-	isAmmoRecharging   = false;
+	m_isReloading      = false;
+	m_ammoSpawnTime    = DEFAULT_AMMO_SPAWN_TIME;
+	m_canRespawnAmmo   = true;
 }
 
 CTank::~CTank()
@@ -209,7 +216,7 @@ bool CTank::shoot(void)
 {
 	if (NULL == m_pIRcom) // check if the IR object is created 
 		return(false);
-	if (isAmmoRecharging) // check if is recharging ammos
+	if (m_isReloading) // check if is recharging ammos
 		return(false);
 	if (m_pIRcom->isSendingData()) // check if is already sending IR data
 		return(false);
@@ -218,8 +225,13 @@ bool CTank::shoot(void)
 
 	// fire sending my ID
 	m_pIRcom->sendByte(MY_ID);
-	isAmmoRecharging = true;
-	m_rechargeTimer.once_ms(m_ammoRechargeTime, ammoRecharge);
+	m_isReloading = true;
+	if (m_canRespawnAmmo) {
+		m_reloadTimer.once_ms(m_ammoRechargeTime, ammoReload, this);
+		if (m_spawnAmmoTimer.active())
+			m_spawnAmmoTimer.detach();
+		m_spawnAmmoTimer.attach_ms(m_ammoSpawnTime, spawnAmmo, this);
+	}
 	if (m_ammo > 0)
 		m_ammo--;
 	shootAnimation();
@@ -250,6 +262,7 @@ void CTank::shootAnimation(void)
 	moveTank(0, 1023);
 	delay(50);
 	moveTank(0, 0);
+	delay(50);
 
 }
 
@@ -619,6 +632,11 @@ void CTank::startHotspot(void)
 			Serial.println("Config file written.");
 		}
 	}
+}
+
+void CTank::ammoReloadDone(void)
+{
+	m_isReloading = false;
 }
 
 bool CTank::writeTankConfigFile(bool useDefault)
