@@ -17,7 +17,14 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define PWM_DEADBAND  300             // PWM motor threshold (below this value the motor is stopped)
 #define ADC_BATTERY_COEFFICENT 1000.0 // ADC correction factor... depending on the voltage divider
 #define BATTERY_VOLTAGE (4.2 / 1024.0) * ADC_BATTERY_COEFFICENT // mv
-#define MY_ID 0x53                    // one byte tank ID (this code is transmitted when the fire button is pressed)
+//#define MY_ID 0x53                    // one byte tank ID (this code is transmitted when the fire button is pressed)
+#define MY_ID 0x08                    // one byte tank ID (this code is transmitted when the fire button is pressed)
+                                      // only first 4 bit -> 16 different codes max
+
+// the code sent to check the proximity (if the turret is near a wall)
+// used to load the hotspot
+#define HOTSPOT_REQUEST_CODE    0x0A
+
 
 // network defaults
 #define DEFAULT_SSID         "mySSID"
@@ -25,7 +32,7 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define DEFAULT_HOTSPOT_SSID "AUGCMyTank"
 #define DEFAULT_HOTSPOT_PSWD ""
 #define DEFAULT_BLYNK_SERVER "blynk-cloud.com"
-#define DEFAULT_BLYNK_PORT   "80"
+#define DEFAULT_BLYNK_PORT   "8080"
 #define DEFAULT_BLYNK_TOKEN  "myBlynkToken"
 
 // servo defaults
@@ -34,10 +41,6 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define DEFAULT_SERVO_MAX_US 2000
 
 #define SERVO_RANGE 500
-
-// time on startup while finding IR carrier to load configuration hotspot.
-// if you want to load the configuration hotspot, simply put the cannon near a wall
-#define CONFIG_TIMEOUT     7000  // milliseconds
 
 // how much time the tank must sense the IR carrier for starting the hotspot
 #define HOTSPOT_TIMEOUT	   2000  // milliseconds
@@ -93,12 +96,49 @@ void saveConfigCallback() {
 // ammoReloadTimer callback. Used to simulate the ammo reload time 
 void ammoReload(CTank* tank) {
 	tank->ammoReloadDone();
-	Serial.println("Recharged");
+//	Serial.println("Recharged");
+}
+
+// Spawn ammo callback. Used to spawn ammos when the tank is not firing
+void spawnAmmo(CTank* tank) {
+	tank->newAmmos(1);
 }
 
 
-void spawnAmmo(CTank* tank) {
-	tank->newAmmos(1);
+// Humming coding... very work in progress maybe Reed Solomon codes is better
+uint8_t hamming7_4Encode(uint8_t data) {
+	uint8_t dataEncoded;
+
+	// only 4 bit data;
+	data = data & 0x0F;
+
+	uint8_t p1 = ((data >> 3) & 0x01) ^ ((data >> 2) & 0x01) ^ ((data >> 1) & 0x01);
+	uint8_t p2 = ((data >> 2) & 0x01) ^ ((data >> 1) & 0x01) ^ ((data >> 0) & 0x01);
+	uint8_t p3 = ((data >> 3) & 0x01) ^ ((data >> 2) & 0x01) ^ ((data >> 0) & 0x01);
+
+	dataEncoded = p3 + (p2 << 1) + (p1 << 2) + data << 3;
+	
+	return(dataEncoded);
+}
+
+uint8_t hamming7_4Decode(uint8_t data) {
+	
+	uint8_t s1 = ((data >> 6) & 0x01) ^ ((data >> 5) & 0x01) ^ ((data >> 4) & 0x01) ^ ((data >> 2) & 0x01);
+	uint8_t s2 = ((data >> 5) & 0x01) ^ ((data >> 4) & 0x01) ^ ((data >> 3) & 0x01) ^ ((data >> 1) & 0x01);
+	uint8_t s3 = ((data >> 6) & 0x01) ^ ((data >> 5) & 0x01) ^ ((data >> 3) & 0x01) ^ ((data >> 0) & 0x01);
+
+	uint8_t s = (s1 << 2) + (s2 << 1) + s3;
+	if (0 != s) {
+		uint8_t mask = 1 << (s - 1);
+		if ((data & mask) != 0)
+			data = data & (!mask);
+		else
+			data = data | mask;
+	}
+	return(data >> 3);
+
+
+
 }
 
 
@@ -224,6 +264,7 @@ bool CTank::shoot(void)
 		return(false);
 
 	// fire sending my ID
+
 	m_pIRcom->sendByte(MY_ID);
 	m_isReloading = true;
 	if (m_canRespawnAmmo) {
@@ -236,6 +277,26 @@ bool CTank::shoot(void)
 		m_ammo--;
 	shootAnimation();
 	return(true);
+}
+
+bool CTank::checkProximity(uint16_t timeout)
+{
+	unsigned long startTime;
+	uint8_t data = 0x00;
+	if (NULL == m_pIRcom) // check if the IR object is created 
+		return(false);
+	startTime = millis();
+	while (((millis() - startTime) < timeout) && (data != HOTSPOT_REQUEST_CODE)){
+		if (!m_pIRcom->isSendingData()) // check if is already sending IR data
+			m_pIRcom->sendByte(HOTSPOT_REQUEST_CODE);
+		delay(10);
+		if (m_pIRcom->available())
+			data = m_pIRcom->receiveByte();
+	}
+
+	if (data == HOTSPOT_REQUEST_CODE)
+		return(true);
+	return false;
 }
 
 void CTank::shakeTurretAnimation(uint8_t times, bool startFromLeft)
@@ -263,7 +324,6 @@ void CTank::shootAnimation(void)
 	delay(50);
 	moveTank(0, 0);
 	delay(50);
-
 }
 
 /*
@@ -637,6 +697,20 @@ void CTank::startHotspot(void)
 void CTank::ammoReloadDone(void)
 {
 	m_isReloading = false;
+}
+
+void CTank::canRespawnAmmo(bool respawn)
+{
+	m_canRespawnAmmo = respawn;
+	if (respawn) {
+		if ((m_ammo < m_maxAmmo) && (!m_spawnAmmoTimer.active()))
+			m_spawnAmmoTimer.attach_ms(m_ammoSpawnTime, spawnAmmo, this);
+	}
+	else
+	{
+		if (m_spawnAmmoTimer.active())
+			m_spawnAmmoTimer.detach();
+	}
 }
 
 bool CTank::writeTankConfigFile(bool useDefault)

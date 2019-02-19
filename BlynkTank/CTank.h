@@ -28,6 +28,7 @@ public:
 	void moveTurretDegree(int angle);
 	void moveTurret_us(int us, bool absolute = false);
 	bool shoot(void);
+	bool checkProximity(uint16_t timeout);
 	void shakeTurretAnimation(uint8_t times, bool startFromLeft = true);
 	void shootAnimation(void);
 	void startHotspot(void);
@@ -56,6 +57,7 @@ public:
 	uint8_t   newAmmos(uint8_t ammos = 1);
 
 	void ammoReloadDone(void);
+	void canRespawnAmmo(bool respawn);
 	bool writeTankConfigFile(bool useDefaults = false);
 
 	//	void checkConfigPortalRequest(bool force = false);

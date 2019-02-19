@@ -14,7 +14,12 @@
 
 
 // Blynk server connection timeout
-#define BLYNK_TIMEOUT    5000         // milliseconds
+#define BLYNK_TIMEOUT           5000 // milliseconds
+
+// When the tank is powered, it shot a codes and try to read it. If it happen, 
+// the hotsopt is forced to load. Useful if you need to enter in hotspot mode.
+// To do it, place the turret cannon in front of a wall (the hand works just fine)
+#define HOTSPOT_REQUEST_TIMEOUT 3000 // milliseconds
 
 #define VIRTUAL_VOLTAGE  V0           // voltage virtual pin. This value is written by the tank to the app
                                       //    Range: [0..4200]
@@ -94,13 +99,11 @@ void needRepairTimerEvent(void) {
 
 }
 
-
 void updateTurretSlider(void) {
 	Blynk.setProperty(VIRTUAL_TURRET, "min", myTank.getServoMin_us());
 	Blynk.setProperty(VIRTUAL_TURRET, "max", myTank.getServoMax_us());
 	Blynk.virtualWrite(VIRTUAL_TURRET, (myTank.getServoMin_us() + myTank.getServoMax_us())/2);
 }
-
 
 void blynkTankInit(void) {
 	Blynk.virtualWrite(VIRTUAL_TURRET_CENTER, 1500 - myTank.getServoCenter());
@@ -119,18 +122,21 @@ void blynkTankInit(void) {
 
 	Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GRAY);
 
-	myTank.moveTurret_us(myTank.getServoCenter(), true);
 	updateTurretSlider();
 
 	// log terminal initialization
 	terminal.clear();
 	terminal.printf("Tank ready!\n");
 	terminal.flush();
+
+	voltageTimer.setInterval(100, voltageTimerEvent);
+
 	myTank.shakeTurretAnimation(1);
 	couldMove = true;
 	couldRepair = false;
-}
+	myTank.canRespawnAmmo(true);
 
+}
 
 // callback that manage the software trimmer to center the turret
 BLYNK_WRITE(VIRTUAL_TURRET_CENTER) {
@@ -239,7 +245,9 @@ BLYNK_WRITE(VIRTUAL_REPAIR_BTN) {
 			couldRepair = 0;
 			needRepairTimer.detach();
 			Blynk.virtualWrite(VIRTUAL_TURRET, (myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
-			myTank.moveTurret_us((myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
+//			myTank.moveTurret_us((myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
+			myTank.moveTurret_us(myTank.getServoCenter(), true);
+			myTank.canRespawnAmmo(true);
 		}
 	}
 }
@@ -262,6 +270,11 @@ void setup()
 {
 	// Debug console
 	Serial.begin(115200);
+
+	// check if the user force to start the hotsopt by placing the turret in front of a wall
+	if (myTank.checkProximity(HOTSPOT_REQUEST_TIMEOUT))
+		myTank.startHotspot();
+
 	myTank.wifiConnect();
 
 	while (!Blynk.connected()) {
@@ -285,9 +298,6 @@ void setup()
 	}
 
 	blynkTankInit();
-
-	voltageTimer.setInterval(100, voltageTimerEvent);
-	myTank.shakeTurretAnimation(1);
 }
 
 void loop()
@@ -308,14 +318,177 @@ void loop()
 			int currentDamage = myTank.getMaxHitpoint() - myTank.gotHit();
 			Blynk.virtualWrite(VIRTUAL_HITPOINT, currentDamage);
 			// print it in the terminal log (with a timing reference) and flush the data
-			terminal.printf("[%07lu] HIT by %c\n", millis() / 100, hitCode);
+			terminal.printf("[%07lu] HIT by %02Xh\n", millis() / 100, hitCode);
 			terminal.flush();
 			if (myTank.getMaxHitpoint() == currentDamage) {
 				Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GREEN);
 				needRepairTimer.attach_ms(300, needRepairTimerEvent);
 				couldRepair = true;
+				myTank.canRespawnAmmo(false);
 			}
 		}
 	}
 }
 
+
+
+/*
+// hamming 4-3
+// https://www.thecrazyprogrammer.com/2017/03/hamming-code-c.html
+void main() {
+	int data[10];
+	int dataatrec[10], c, c1, c2, c3, i;
+
+	printf("Enter 4 bits of data one by one\n");
+	scanf("%d", &data[0]);
+	scanf("%d", &data[1]);
+	scanf("%d", &data[2]);
+	scanf("%d", &data[4]);
+
+	//Calculation of even parity
+	data[6] = data[0] ^ data[2] ^ data[4];
+	data[5] = data[0] ^ data[1] ^ data[4];
+	data[3] = data[0] ^ data[1] ^ data[2];
+
+	printf("\nEncoded data is\n");
+	for (i = 0; i < 7; i++)
+		printf("%d", data[i]);
+
+	printf("\n\nEnter received data bits one by one\n");
+	for (i = 0; i < 7; i++)
+		scanf("%d", &dataatrec[i]);
+
+	c1 = dataatrec[6] ^ dataatrec[4] ^ dataatrec[2] ^ dataatrec[0];
+	c2 = dataatrec[5] ^ dataatrec[4] ^ dataatrec[1] ^ dataatrec[0];
+	c3 = dataatrec[3] ^ dataatrec[2] ^ dataatrec[1] ^ dataatrec[0];
+	c = c3 * 4 + c2 * 2 + c1;
+
+	if (c == 0) {
+		printf("\nNo error while transmission of data\n");
+	}
+	else {
+		printf("\nError on position %d", c);
+
+		printf("\nData sent : ");
+		for (i = 0; i < 7; i++)
+			printf("%d", data[i]);
+
+		printf("\nData received : ");
+		for (i = 0; i < 7; i++)
+			printf("%d", dataatrec[i]);
+
+		printf("\nCorrect message is\n");
+
+		//if errorneous bit is 0 we complement it else vice versa
+		if (dataatrec[7 - c] == 0)
+			dataatrec[7 - c] = 1;
+		else
+			dataatrec[7 - c] = 0;
+
+		for (i = 0; i < 7; i++) {
+			printf("%d", dataatrec[i]);
+		}
+	}
+}
+*/
+
+
+
+// Generic hamming codes
+/*
+#include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+using namespace std;
+int
+main ()
+{
+  int a, b, c[30], d, r = 0, d1; //Max bits here i kept is 30
+  cout << " Enter the No of Data Bits you want to Enter : ";
+  cin >> a;
+
+  while (a + r + 1 >= pow (2, r))
+	{
+	  r++;
+	}
+  cout << "No of data bits to be added " << r << " : Total Bits :" << a +
+	r << endl;
+
+  cout << " Enter the Data Bits One by One :" << endl;
+
+  for (int i = 1; i <= a; ++i)
+	cin >> c[i];
+
+  cout << endl << " Data bits entered : ";
+
+  for (int i = 1; i <= a; ++i)
+	cout << c[i] << " ";
+
+  cout << endl;
+
+  int data[a + r];
+  d = 0;
+  d1 = 1;
+
+  for (int i = 1; i <= a + r; ++i)
+	{
+	  if ((i) == pow (2, d))
+ {
+   data[i] = 0;
+   ++d;
+ }
+	  else
+ {
+   data[i] = c[d1];
+   ++d1;
+ }
+	}
+
+  cout << " Data Bits are Encoded with Parity bits(0): ";
+
+  for (int i = 1; i <= a + r; ++i)
+	cout << data[i] << " ";
+
+  d1 = 0;
+  int min, max = 0, parity, s, j;
+
+ //Parity Bit Calculation
+for (int i = 1; i <= a + r; i = pow(2, d1))
+{
+	++d1;
+	parity = 0;
+	j = i;
+	s = i;
+	min = 1;
+	max = i;
+	for (j; j <= a + r;)
+	{
+		for (s = j; max >= min && s <= a + r; ++min, ++s)
+		{
+			if (data[s] == 1)
+				parity++;
+		}
+		j = s + i;
+		min = 1;
+	}
+	if (parity % 2 == 0) // Even Parity
+	{
+		data[i] = 0;
+	}
+	else
+	{
+		data[i] = 1;
+	}
+}
+
+cout << endl << " Hamming codeword bits for even parity are : ";
+
+for (int i = 1; i <= a + r; ++i)
+cout << data[i] << " ";
+
+cout << endl << endl;
+}
+//End
+*/
