@@ -135,6 +135,7 @@ void blynkTankInit(void) {
 	couldMove = true;
 	couldRepair = false;
 	myTank.canRespawnAmmo(true);
+	myTank.setVolume(25);
 
 }
 
@@ -226,6 +227,8 @@ BLYNK_WRITE(VIRTUAL_FIRE_BTN) {
 	if (value == 1) {
 		if (myTank.shoot()) {// shoot an ammo
 			Blynk.virtualWrite(VIRTUAL_AMMO, myTank.getAmmo());
+			myTank.playSound(4);
+			myTank.shootAnimation();
 		}
 	}
 }
@@ -304,6 +307,8 @@ void loop()
 {
 	Blynk.run(); // Blynk server synchronization
 	voltageTimer.run();
+
+//	myTank.printMP3Debug();
 
 	// for auto regenerating ammos
 	if (ammos != myTank.getAmmo()) {

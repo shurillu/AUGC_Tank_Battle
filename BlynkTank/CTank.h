@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include <Ticker.h>
+#include <SoftwareSerial.h>
 #include "CIR.h"
 
 #//define FIRMWARE_VERSION    "1.0.0" // firmware version
@@ -60,9 +61,14 @@ public:
 	void canRespawnAmmo(bool respawn);
 	bool writeTankConfigFile(bool useDefaults = false);
 
+	void playSound(uint16_t soundID);
+	void setVolume(uint8_t volume);
+	void printMP3Debug(void);
+
 	//	void checkConfigPortalRequest(bool force = false);
 
 private:
+	SoftwareSerial *m_pMP3com;
 	Servo    m_turret;
 	CIR     *m_pIRcom;
 	String   m_wifiSSID,
@@ -78,7 +84,10 @@ private:
 	uint8_t  m_ammoDamage, m_maxAmmo, m_ammo;
 	uint16_t m_ammoRechargeTime, m_ammoSpawnTime;
 	uint8_t  m_repairValue;
-	
+
+	uint8_t m_MP3Packet[10];
+
+
 	Ticker   m_reloadTimer;
 	Ticker   m_spawnAmmoTimer;
 
@@ -91,7 +100,8 @@ private:
 	bool readTankConfigFile(void);
 	void setTankConfigDefaults(void);
 	void setNetworkConfigDefaults(void);
-
+	
+	void MP3SendCommand(uint8_t command, uint16_t parameter, bool feedback = false);
 };
 
 #endif // !CTANK

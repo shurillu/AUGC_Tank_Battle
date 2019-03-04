@@ -9,9 +9,13 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define L_MOTOR_DIR_PIN D3
 #define R_MOTOR_DIR_PIN D4
 
-#define TX_PIN          D5 // IR tx pin
-#define RX_PIN          D6 // IR rx pin
-#define TURRET_PIN      D8 // servo turret pin
+#define IR_TX_PIN       D5 // IR tx pin
+#define IR_RX_PIN       D6 // IR rx pin
+//#define TURRET_PIN      D8 // servo turret pin
+#define TURRET_PIN      D0 // servo turret pin
+
+#define MP3_TX_PIN      D8 // MP3 tx pin
+#define MP3_RX_PIN      D7 // MP3 rx pin
 
 #define TURRET_CENTER 98              // the turret center position (degree)
 #define PWM_DEADBAND  300             // PWM motor threshold (below this value the motor is stopped)
@@ -142,6 +146,14 @@ uint8_t hamming7_4Decode(uint8_t data) {
 }
 
 
+
+
+
+
+
+
+
+
 CTank::CTank():CTank(false)
 {
 }
@@ -149,7 +161,9 @@ CTank::CTank():CTank(false)
 CTank::CTank(bool formatFS)
 {
 	// IR transceiver object
-	m_pIRcom = new CIR(RX_PIN, TX_PIN);
+	m_pIRcom  = new CIR(IR_RX_PIN, IR_TX_PIN);
+	m_pMP3com = new SoftwareSerial(MP3_RX_PIN, MP3_TX_PIN);
+	m_pMP3com->begin(9600);
 
 	// servo turret initialization
 	m_turret.attach(TURRET_PIN);
@@ -185,6 +199,7 @@ CTank::CTank(bool formatFS)
 CTank::~CTank()
 {
 	delete m_pIRcom;
+	delete m_pMP3com;
 }
 
 void CTank::moveTank(int joystickX, int joystickY) {
@@ -275,7 +290,6 @@ bool CTank::shoot(void)
 	}
 	if (m_ammo > 0)
 		m_ammo--;
-	shootAnimation();
 	return(true);
 }
 
@@ -713,6 +727,31 @@ void CTank::canRespawnAmmo(bool respawn)
 	}
 }
 
+
+void CTank::MP3SendCommand(uint8_t command, uint16_t parameter, bool feedback) {
+	m_pMP3com->flush();
+	m_MP3Packet[0] = 0x7E;     // start
+	m_MP3Packet[1] = 0xFF;     // version
+	m_MP3Packet[2] = 0x06;     // data lenght
+	m_MP3Packet[3] = command;  // command code
+	m_MP3Packet[4] = feedback; // feedback/response
+	m_MP3Packet[5] = parameter >> 8;
+	m_MP3Packet[6] = parameter & 0x00FF;
+	m_MP3Packet[9] = 0xEF;     // end
+
+	int16_t checksum = 0;
+	for (int i = 1; i < 7; i++)
+		checksum += m_MP3Packet[i];
+	checksum = -checksum;
+	m_MP3Packet[7] = checksum >> 8;
+	m_MP3Packet[8] = checksum & 0x00FF;
+
+	m_pMP3com->write(m_MP3Packet, 10);
+}
+
+
+
+
 bool CTank::writeTankConfigFile(bool useDefault)
 {
 	File configFile = SPIFFS.open(TANK_CONFIG_FILE, "w");
@@ -736,6 +775,31 @@ bool CTank::writeTankConfigFile(bool useDefault)
 
 	return(true);
 }
+
+void CTank::playSound(uint16_t soundID)
+{
+	MP3SendCommand(0x03, soundID);
+}
+
+void CTank::setVolume(uint8_t volume)
+{
+	if (volume > 30)
+		volume = 30;
+	MP3SendCommand(0x06, volume);
+}
+
+void CTank::printMP3Debug(void)
+{
+	if (m_pMP3com->available()) {
+		Serial.print("MP3 Data: ");
+		while (m_pMP3com->available()) {
+			Serial.print(m_pMP3com->read(), HEX);
+		}
+		Serial.println();
+	}
+}
+
+
 
 bool CTank::readTankConfigFile(void)
 {
