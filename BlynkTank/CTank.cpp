@@ -727,7 +727,6 @@ void CTank::canRespawnAmmo(bool respawn)
 	}
 }
 
-
 void CTank::MP3SendCommand(uint8_t command, uint16_t parameter, bool feedback) {
 	m_pMP3com->flush();
 	m_MP3Packet[0] = 0x7E;     // start
@@ -747,33 +746,6 @@ void CTank::MP3SendCommand(uint8_t command, uint16_t parameter, bool feedback) {
 	m_MP3Packet[8] = checksum & 0x00FF;
 
 	m_pMP3com->write(m_MP3Packet, 10);
-}
-
-
-
-
-bool CTank::writeTankConfigFile(bool useDefault)
-{
-	File configFile = SPIFFS.open(TANK_CONFIG_FILE, "w");
-	if (!configFile) {
-		Serial.printf("Unable to create %s file.\n", TANK_CONFIG_FILE);
-		return(false);
-	}
-
-	configFile.printf("%s%s\n", VERSION_TAG, TANK_CFG_FILE_VERSION);
-	if (useDefault) {
-		configFile.printf("%s%u\n", SERVO_MIN_US_TAG, DEFAULT_SERVO_MIN_US);
-		configFile.printf("%s%u\n", SERVO_MAX_US_TAG, DEFAULT_SERVO_MAX_US);
-		configFile.printf("%s%u\n", SERVO_CENTER_TAG, DEFAULT_SERVO_CENTER);
-	}
-	else {
-		configFile.printf("%s%u\n", SERVO_MIN_US_TAG, m_servoMin_us);
-		configFile.printf("%s%u\n", SERVO_MAX_US_TAG, m_servoMax_us);
-		configFile.printf("%s%u\n", SERVO_CENTER_TAG, m_servoCenter);
-	}
-	configFile.close();
-
-	return(true);
 }
 
 void CTank::playSound(uint16_t soundID)
@@ -799,7 +771,29 @@ void CTank::printMP3Debug(void)
 	}
 }
 
+bool CTank::writeTankConfigFile(bool useDefault)
+{
+	File configFile = SPIFFS.open(TANK_CONFIG_FILE, "w");
+	if (!configFile) {
+		Serial.printf("Unable to create %s file.\n", TANK_CONFIG_FILE);
+		return(false);
+	}
 
+	configFile.printf("%s%s\n", VERSION_TAG, TANK_CFG_FILE_VERSION);
+	if (useDefault) {
+		configFile.printf("%s%u\n", SERVO_MIN_US_TAG, DEFAULT_SERVO_MIN_US);
+		configFile.printf("%s%u\n", SERVO_MAX_US_TAG, DEFAULT_SERVO_MAX_US);
+		configFile.printf("%s%u\n", SERVO_CENTER_TAG, DEFAULT_SERVO_CENTER);
+	}
+	else {
+		configFile.printf("%s%u\n", SERVO_MIN_US_TAG, m_servoMin_us);
+		configFile.printf("%s%u\n", SERVO_MAX_US_TAG, m_servoMax_us);
+		configFile.printf("%s%u\n", SERVO_CENTER_TAG, m_servoCenter);
+	}
+	configFile.close();
+
+	return(true);
+}
 
 bool CTank::readTankConfigFile(void)
 {

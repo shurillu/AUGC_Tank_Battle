@@ -74,6 +74,10 @@ uint8_t ammos;
 
 bool turretRepairMovement;
 
+uint8_t defaultVolume;
+uint16_t fxID_Shoot;
+
+
 // timer handlers -----------------------------------------------------------------------------------------------------
 void voltageTimerEvent(void){
 	uint16_t voltage = myTank.getBatteryVoltage();
@@ -103,6 +107,11 @@ void updateTurretSlider(void) {
 	Blynk.setProperty(VIRTUAL_TURRET, "min", myTank.getServoMin_us());
 	Blynk.setProperty(VIRTUAL_TURRET, "max", myTank.getServoMax_us());
 	Blynk.virtualWrite(VIRTUAL_TURRET, (myTank.getServoMin_us() + myTank.getServoMax_us())/2);
+}
+
+void soundFXInit(void) {
+	defaultVolume = 0x20;
+	fxID_Shoot    = 0x04;
 }
 
 void blynkTankInit(void) {
@@ -135,7 +144,7 @@ void blynkTankInit(void) {
 	couldMove = true;
 	couldRepair = false;
 	myTank.canRespawnAmmo(true);
-	myTank.setVolume(25);
+	myTank.setVolume(defaultVolume);
 
 }
 
@@ -227,7 +236,7 @@ BLYNK_WRITE(VIRTUAL_FIRE_BTN) {
 	if (value == 1) {
 		if (myTank.shoot()) {// shoot an ammo
 			Blynk.virtualWrite(VIRTUAL_AMMO, myTank.getAmmo());
-			myTank.playSound(4);
+			myTank.playSound(fxID_Shoot);
 			myTank.shootAnimation();
 		}
 	}
@@ -300,6 +309,7 @@ void setup()
 		}
 	}
 
+	soundFXInit();
 	blynkTankInit();
 }
 
