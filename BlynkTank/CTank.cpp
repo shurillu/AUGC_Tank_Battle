@@ -22,7 +22,7 @@ ADC_MODE(ADC_TOUT) // NodeMCU ADC initialization: external pin reading values en
 #define ADC_BATTERY_COEFFICENT 1000.0 // ADC correction factor... depending on the voltage divider
 #define BATTERY_VOLTAGE (4.2 / 1024.0) * ADC_BATTERY_COEFFICENT // mv
 //#define MY_ID 0x53                    // one byte tank ID (this code is transmitted when the fire button is pressed)
-#define MY_ID 0x08                    // one byte tank ID (this code is transmitted when the fire button is pressed)
+#define MY_ID 0x0F                    // one byte tank ID (this code is transmitted when the fire button is pressed)
                                       // only first 4 bit -> 16 different codes max
 
 // the code sent to check the proximity (if the turret is near a wall)
@@ -414,8 +414,11 @@ bool CTank::wifiConnect(bool autoStartHotspot)
 	}
 	else {
 		// unable to connect -> launch WiFi manager
-		if (autoStartHotspot)
+		Serial.printf("Unable to connect to %s\n", m_wifiSSID.c_str());
+		if (autoStartHotspot) {
+			Serial.printf("Launching hotspot...\n");
 			startHotspot();
+		}
 		else
 			return(false);
 	}

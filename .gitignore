@@ -337,3 +337,8 @@ BlynkTank/__vm/Compile.vmps.xml
 BlynkTank/__vm/Configuration.Debug.vmps.xml
 BlynkTank/__vm/Upload.vmps.xml
 BlynkTank/BlynkTank.vcxproj.filters
+ServoCenter/__vm/.ServoCenter.vsarduino.h
+ServoCenter/__vm/Compile.vmps.xml
+ServoCenter/__vm/Configuration.Release.vmps.xml
+ServoCenter/__vm/Upload.vmps.xml
+ServoCenter/ServoCenter.vcxproj.filters
