@@ -677,11 +677,11 @@ void CTank::startHotspot(void)
 	shouldSaveConfig = false;
 	wifiManager.setAPCallback(configModeCallback);
 	wifiManager.setSaveConfigCallback(saveConfigCallback);
-	WiFiManagerParameter customHotspotSSID("HS SSID", "Hotspot SSID", m_hotspotSSID.c_str(), 20);
+	WiFiManagerParameter customHotspotSSID("HS SSID", "Hotspot SSID", m_hotspotSSID.c_str(), 40);
 	wifiManager.addParameter(&customHotspotSSID);
-	WiFiManagerParameter customHotspotPSW("HS PSWD", "Hotspot password", m_hotspotPSW.c_str(), 20);
+	WiFiManagerParameter customHotspotPSW("HS PSWD", "Hotspot password", m_hotspotPSW.c_str(), 40);
 	wifiManager.addParameter(&customHotspotPSW);
-	WiFiManagerParameter customBlynkServer("Server", "Blynk Server", m_blynkServer.c_str(), 20);
+	WiFiManagerParameter customBlynkServer("Server", "Blynk Server", m_blynkServer.c_str(), 40);
 	wifiManager.addParameter(&customBlynkServer);
 	WiFiManagerParameter customBlynkPort("Port", "Blynk Port", m_blynkPort.c_str(), 5);
 	wifiManager.addParameter(&customBlynkPort);
@@ -751,9 +751,13 @@ void CTank::MP3SendCommand(uint8_t command, uint16_t parameter, bool feedback) {
 	m_pMP3com->write(m_MP3Packet, 10);
 }
 
-void CTank::playSound(uint16_t soundID)
+void CTank::playSound(uint16_t soundID, bool loop)
 {
-	MP3SendCommand(0x03, soundID);
+	if (loop) 
+		MP3SendCommand(0x08, soundID);
+	else
+		MP3SendCommand(0x03, soundID);
+
 }
 
 void CTank::setVolume(uint8_t volume)

@@ -61,7 +61,7 @@ public:
 	void canRespawnAmmo(bool respawn);
 	bool writeTankConfigFile(bool useDefaults = false);
 
-	void playSound(uint16_t soundID);
+	void playSound(uint16_t soundID, bool loop = false);
 	void setVolume(uint8_t volume);
 	void printMP3Debug(void);
 

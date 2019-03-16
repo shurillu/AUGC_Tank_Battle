@@ -78,6 +78,11 @@ uint8_t defaultVolume;
 uint16_t fxID_Shoot;
 
 
+uint16_t fxID_Error;
+uint16_t fxID_Start;
+uint16_t fxID_Damage;
+uint16_t fxID_Burn;
+
 // timer handlers -----------------------------------------------------------------------------------------------------
 void voltageTimerEvent(void){
 	uint16_t voltage = myTank.getBatteryVoltage();
@@ -111,7 +116,12 @@ void updateTurretSlider(void) {
 
 void soundFXInit(void) {
 	defaultVolume = 0x20;
+	fxID_Error    = 0x01;
+	fxID_Start    = 0x02;
+	fxID_Burn     = 0x03;
 	fxID_Shoot    = 0x04;
+	fxID_Damage   = 0x05;
+
 }
 
 void blynkTankInit(void) {
@@ -260,6 +270,7 @@ BLYNK_WRITE(VIRTUAL_REPAIR_BTN) {
 //			myTank.moveTurret_us((myTank.getServoMin_us() + myTank.getServoMax_us()) / 2);
 			myTank.moveTurret_us(myTank.getServoCenter(), true);
 			myTank.canRespawnAmmo(true);
+			myTank.playSound(fxID_Start);
 		}
 	}
 }
@@ -282,11 +293,13 @@ void setup()
 {
 	// Debug console
 	Serial.begin(115200);
-	delay(500);
+	delay(2000);
 
+	soundFXInit();
 	// check if the user force to start the hotsopt by placing the turret in front of a wall
 	if (myTank.checkProximity(HOTSPOT_REQUEST_TIMEOUT)) {
 		Serial.printf("\nProximity detected. Launching hotspot\n");
+		myTank.playSound(fxID_Error);
 		myTank.startHotspot();
 	}
 
@@ -309,12 +322,14 @@ void setup()
 		Blynk.connect(BLYNK_TIMEOUT);
 		if (!Blynk.connected()) {
 			Serial.printf("Unable to connect to %s server. Launching hotspot...\n", myTank.getBlynkServer().c_str());
+			myTank.playSound(fxID_Error);
 			myTank.startHotspot();
 		}
 	}
 
-	soundFXInit();
+	myTank.playSound(fxID_Start);
 	blynkTankInit();
+
 }
 
 void loop()
@@ -340,11 +355,16 @@ void loop()
 			terminal.printf("[%07lu] HIT by %02Xh\n", millis() / 100, hitCode);
 			terminal.flush();
 			if (myTank.getMaxHitpoint() == currentDamage) {
+				myTank.moveTank(0, 0);
+				myTank.playSound(fxID_Burn, true);
 				Blynk.setProperty(VIRTUAL_REPAIR_BTN, "offBackColor", BLYNK_GREEN);
 				needRepairTimer.attach_ms(300, needRepairTimerEvent);
 				couldRepair = true;
 				myTank.canRespawnAmmo(false);
 			}
+			else
+				myTank.playSound(fxID_Damage);
+
 		}
 	}
 }
